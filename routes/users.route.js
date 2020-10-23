@@ -55,6 +55,19 @@ router.post('/login', async(req, res) => {
       res.status(400).send(error)
   }
 })
+router.get('/logout', auth, async (req, res) => {
+  // Log user out of the application
+  console.log("log");
+  try {
+      req.user.tokens = req.user.tokens.filter((token) => {
+          return token.token != req.token
+      })
+      await req.user.save()
+      res.status(200).send("logout complete")
+  } catch (error) {
+      res.status(500).send("err")
+  }
+})
 router.get('/me', auth, async(req, res) => {
   // View logged in user profile
   res.status(200).send(req.user)

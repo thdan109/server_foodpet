@@ -6,6 +6,7 @@ var User = require('../models/user.model');
 var Product = require('../models/product.model');
 
 const multer = require("multer");
+const { search } = require('./index.route');
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
       cb(null, './uploads/images/products')
@@ -18,8 +19,7 @@ const uploadProduct = multer({storage: storage});
 
 
 router.post('/upload',uploadProduct.array("photos",8),async function (req, res) {
-    console.log("product test");
-      //  console.log(req.files);         
+    console.log("product test");      
         try{
             let fileName = req.files.map(file=>file.path)
             console.log(fileName);
@@ -27,6 +27,7 @@ router.post('/upload',uploadProduct.array("photos",8),async function (req, res) 
               name: req.body.name,
               description: req.body.description,
               picture: fileName,
+              type: req.body.type,
               number: req.body.number,
               price: req.body.price
             })
@@ -36,12 +37,48 @@ router.post('/upload',uploadProduct.array("photos",8),async function (req, res) 
                 res.status(400).send(e);
             })
             
-            // res.status(201).send("{user,token}")
           }catch(err){
             res.status(400).send(err)
           }
 
-        //    res.json({status: 'ok', message: 'Pictures uploaded'});
+});
+
+router.get('/all',async function (req, res) {
+  console.log("get all product");
+      // console.log(req.query);  
+      const name = req.query.search;    
+      let type = req.query.filler;  
+      
+      try{
+        if(name || type ){
+          console.log(type);
+          if(type===undefined){
+            type = ['food', 'tool', 'care', 'other'];
+          }
+          var nameRegex = new RegExp(name);
+          await Product.find({ $and:[
+            {"name": {$regex: nameRegex, $options: 'i'}},
+            {"type": {$in: type}}
+          ]}).then(product => {
+            res.status(200).send(product)
+          }, (e) => {
+              res.status(400).send(e);
+          })
+        }else{
+          await Product.find().then(product => {
+            res.status(200).send(product)
+          }, (e) => {
+              res.status(400).send(e);
+          })
+        }
+         
+          
+          // res.status(201).send("{user,token}")
+        }catch(err){
+          res.status(400).send(err)
+        }
+
+      //    res.json({status: 'ok', message: 'Pictures uploaded'});
 
 });
 /* GET users listing. */
