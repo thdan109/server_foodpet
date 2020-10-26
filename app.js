@@ -9,6 +9,8 @@ var multer = require('multer')
 var indexRouter = require('./routes/index.route');
 var usersRouter = require('./routes/users.route');
 var productRouter = require('./routes/product.route');
+var cartRouter = require('./routes/cart.route');
+
 var cors = require('cors')
 const bodyParser = require('body-parser');
 const  PATH_TEST  = process.env.PATH_TEST
@@ -45,6 +47,8 @@ const upload = multer({dest:__dirname+"/uploads/images"});
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/products', productRouter);
+app.use('/carts', cartRouter);
+
 app.use('/test', (res,req)=>{
     req.send({test1:"conga"})
 });
