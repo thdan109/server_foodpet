@@ -10,6 +10,7 @@ var indexRouter = require('./routes/index.route');
 var usersRouter = require('./routes/users.route');
 var productRouter = require('./routes/product.route');
 var cartRouter = require('./routes/cart.route');
+var orderRouter = require('./routes/order.route');
 
 var cors = require('cors')
 const bodyParser = require('body-parser');
@@ -48,7 +49,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/products', productRouter);
 app.use('/carts', cartRouter);
-
+app.use('/orders', orderRouter);
 app.use('/test', (res,req)=>{
     req.send({test1:"conga"})
 });
