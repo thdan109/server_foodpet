@@ -15,11 +15,6 @@ router.post("/add",auth, async (req, res) => {
         more,
         price,
       }= req.body;
-    //   console.log(userId,
-    //     address,
-    //     phone,
-    //     more,
-    //     price,);
     try {
       let cart = await Cart.findOne({ userId });
       if (cart) {
@@ -38,13 +33,15 @@ router.post("/add",auth, async (req, res) => {
       res.status(500).send("Something went wrong");
     }
   });
-  
+
+  //get all orders for user
+
 router.get("/user", auth, async (req, res) => {
   console.log("log cart for user");
 
   try {
-    let cart = await Cart.findOne({ userId:req.user._id });
-    return res.status(201).send(cart);
+    let order = await Order.find({ userId:req.user._id });
+    return res.status(201).send(order);
     
   } catch (err) {
     console.log(err);
