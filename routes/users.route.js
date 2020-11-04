@@ -88,6 +88,21 @@ router.get('/get', async(req, res) => {
       res.status(400).send(error)
   }
 })
+router.get('/all', async(req, res) => {
+  console.log("get all");
+  //Login a registered user
+  try {
+    
+      const users = await User.find()
+      if (!users) {
+          return res.status(401).send({error: 'Login failed! Check authentication credentials'})
+      }
+      // const token = await user.generateAuthToken()
+      res.send(users)
+  } catch (error) {
+      res.status(400).send(error)
+  }
+})
 router.post('/upload', uploadUser.single('photo'), (req, res) => {
  
   if(req.file) {

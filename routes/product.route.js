@@ -17,6 +17,35 @@ var storage = multer.diskStorage({
   })
 const uploadProduct = multer({storage: storage});
 
+router.post('/update', async (req, res) => {
+  // console.log("hahah",req.body);
+  const { name,description,number,price ,type,_id} = req.body
+  try {
+    let product = await Product.findOne({ _id });
+    
+    if (product) {
+     product.name = name;
+     product.description = description;
+     product.number = number;
+     product.price= price;
+     product.type = (type)?type : "food"; 
+    }
+   
+    product = await product.save();
+    return res.status(201).send("update Complete");
+  } catch (err) {
+  //   console.log(err);
+    res.status(500).send("Something went wrong");
+  }
+})
+
+router.post('/delete', async (req, res) => {
+  await Product.findOneAndRemove({id: req.body._id}).then(() => {
+      res.send("complete")
+  }, (e) => {
+      res.status(400).send(e);
+  })
+})
 
 router.post('/upload',uploadProduct.array("photos",8),async function (req, res) {
     console.log("product test");      
