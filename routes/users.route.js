@@ -3,6 +3,7 @@ var express = require('express');
 var router = express.Router();
 const auth = require("../middleware/auth")
 var User = require('../models/user.model');
+var transporter = require('../mail/index')
 
 const multer = require("multer");
 var storage = multer.diskStorage({
@@ -42,14 +43,18 @@ router.post('/login', async(req, res) => {
   console.log("login");
   //Login a registered user
   try {
-    
-      const { email, password } = req.body
+      const { email, password,tokenDevices } = req.body
+      console.log(tokenDevices);
       console.log(req.body);
       const user = await User.findByCredentials(email, password)
       if (!user) {
           return res.status(401).send({error: 'Login failed! Check authentication credentials'})
       }
-      const token = await user.generateAuthToken()
+      // console.log(user.tokenDevices.indexOf(tokenDevices));
+      // if(user.tokenDevices.indexOf(tokenDevices)===-1){
+      //   user.tokenDevices.push(tokenDevices);
+      // }
+      const token = await user.generateAuthToken(tokenDevices)
       res.send({ user, token })
   } catch (error) {
       res.status(400).send(error)
@@ -62,6 +67,7 @@ router.get('/logout', auth, async (req, res) => {
       req.user.tokens = req.user.tokens.filter((token) => {
           return token.token != req.token
       })
+    
       await req.user.save()
       res.status(200).send("logout complete")
   } catch (error) {
@@ -115,5 +121,34 @@ router.get('/testSchema',()=>{
   user.log()
   res.status(200)
 })
+
+router.get('/code',auth, async function(req, res, next) {
+  let r = Math.random().toString(36).substring(9);
+
+  var mailOptions = {
+    from: 'noyrely@gmail.com',
+    to: req.user.email,
+    subject: 'Code change password',
+    text: 'Your Code: '+ r,
+  };
+
+  await transporter.sendMail(mailOptions, function(error, info){
+    if (error) {
+      console.log(error);
+    } else {
+      console.log('Email sent: ' + info.response);
+    }
+  });
+  res.send(r);
+});
+router.post('/change/password',auth, async function(req, res, next) { 
+  try {
+      req.user.password = req.body.password;
+      await req.user.save()
+      res.status(200).send("change pass complete")
+  } catch (error) {
+      res.status(500).send("err")
+  }
+});
 
 module.exports = router;

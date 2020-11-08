@@ -6,6 +6,8 @@ var User = require('../models/user.model');
 var Cart = require('../models/cart.model');
 var transporter = require('../mail/index')
 var Order = require('../models/order.model');
+var Product = require('../models/product.model');
+const { default: Axios } = require('axios');
 
 router.post("/add",auth, async (req, res) => {
     const {
@@ -67,6 +69,44 @@ router.get('/all', async(req, res) => {
         res.status(400).send(error)
     }
   })
+  router.get('/top', async(req, res) => {
+    console.log("get top order");
+   
+    try {
+      
+        const orders = await Order.aggregate([
+        // { $match   : { _id : null }  },
+        { $project : { "products" : 1, _id:0 } },
+        { $unwind  : "$products"},
+        // { $match   : { "products._id":{"$ne": 531  } } },
+           { $group   : { 
+                        _id : "$products.productId", 
+                        totalSales : { $sum : "$products.quantity" } } },
+           { $sort    : { totalSales : -1 } },
+           { $limit   : 5 } 
+      ])
+        const listId = orders.map(value=> value._id)
+        const ordersFill = await Product.find( {_id:{$in: listId}})
+        if (!ordersFill) {
+            return res.status(401).send({error: 'NO orders Top'})
+        }
+      
+        const ordersFillLast = ordersFill.map((order,index)=>{
+          const temp = {
+            _id: order._id,
+            picture: order.picture,
+            name: order.name,
+            price: order.price,
+            type: order.type,
+            totalSales: orders[index].totalSales
+          }
+          return temp;
+        })
+        res.send(ordersFillLast)
+    } catch (error) {
+        res.status(400).send(error)
+    }
+  })
 router.get("/user", auth, async (req, res) => {
   console.log("log cart for user");
 
@@ -90,9 +130,16 @@ router.post('/update', async (req, res) => {
     }
    
     order = await order.save();
+
+    const user = await User.findOne({ _id: order.userId})
+    for(var a of user.tokens){
+      sendPushNotification(a.tokenDevices,status,_id)
+    }
+    // console.log(user.tokens[0].tokenDevices);
+
     return res.status(201).send("update Complete");
   } catch (err) {
-  //   console.log(err);
+    console.log(err);
     res.status(500).send("Something went wrong");
   }
 })
@@ -100,5 +147,41 @@ router.post('/update', async (req, res) => {
 router.get('/', function(req, res, next) {
   res.send('respond with a cart rouse');
 });
+async function sendPushNotification(expoPushToken,i,id) {
+  var text = ''
+  switch (Number(i)) {
+    case 1:
+      text =  "cho xac nhan.";
+      break;
+    case 2:
+      text =  "da duoc xac nhan.";
+      break;
+    case 3:
+      text =  "dang van chuyen.";
+      break;
+    case 4:
+      text =  "da giao.";
+      break;
+    default: 
+      text =  "null";
+      break;
+  }
+  
 
+  const message = {
+    to: expoPushToken,
+    sound: 'default',
+    title: 'Update Status Order',
+    body: 'Order '+ id + ": "+ text,
+    data: { data: 'goes here' },
+  };
+  await Axios.post('https://exp.host/--/api/v2/push/send', JSON.stringify(message), {
+    headers: {
+      Accept: 'application/json',
+      'Accept-encoding': 'gzip, deflate',
+      'Content-Type': 'application/json',
+    },
+   
+  });
+}
 module.exports = router;
