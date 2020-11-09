@@ -72,12 +72,13 @@ router.post('/upload',uploadProduct.array("photos",8),async function (req, res) 
 
 });
 
-router.get('/all',async function (req, res) {
-  console.log("get all product");
+router.get('/all/',async function (req, res) {
+  console.log("get all product,", req.params);
       // console.log(req.query);  
       const name = req.query.search;    
       let type = req.query.filler;  
-      
+      let limit = Number(req.query.limit);  
+      console.log(limit, typeof(limit));
       try{
         if(name || type ){
           console.log(type);

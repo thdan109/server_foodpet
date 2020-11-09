@@ -141,10 +141,32 @@ router.get('/code',auth, async function(req, res, next) {
   });
   res.send(r);
 });
-router.post('/change/password',auth, async function(req, res, next) { 
+router.get('/code/email/:email', async function(req, res, next) {
+  let r = Math.random().toString(36).substring(9);
+  console.log(req.params.email);
+  var mailOptions = {
+    from: 'noyrely@gmail.com',
+    to: req.params.email,
+    subject: 'Code change password',
+    text: 'Your Code: '+ r,
+  };
+
+  await transporter.sendMail(mailOptions, function(error, info){
+    if (error) {
+      console.log(error);
+    } else {
+      console.log('Email sent: ' + info.response);
+    }
+  });
+  res.send(r);
+});
+router.post('/change/password', async function(req, res, next) { 
+  const email = req.body.email;
+  
   try {
-      req.user.password = req.body.password;
-      await req.user.save()
+      const user =await User.findOne({email})
+      if(user) user.password = req.body.password;
+      await user.save()
       res.status(200).send("change pass complete")
   } catch (error) {
       res.status(500).send("err")

@@ -28,15 +28,12 @@ router.post("/add",auth, async (req, res) => {
             products: [...cart.products]
         })
         await Cart.findOneAndRemove({ userId });
-        console.log("daas",newOrder);
-
         var mailOptions = {
             from: 'noyrely@gmail.com',
             to: email,
             subject: 'Order Successfully',
             text: 'Order Successfully'
           };
-
         transporter.sendMail(mailOptions, function(error, info){
           if (error) {
             console.log(error);
@@ -64,7 +61,7 @@ router.get('/all', async(req, res) => {
             return res.status(401).send({error: 'NO orders'})
         }
         // const token = await user.generateAuthToken()
-        res.send(orders)
+        res.send(orders.reverse())
     } catch (error) {
         res.status(400).send(error)
     }
@@ -102,7 +99,7 @@ router.get('/all', async(req, res) => {
           }
           return temp;
         })
-        res.send(ordersFillLast)
+        res.send(ordersFillLast.reverse())
     } catch (error) {
         res.status(400).send(error)
     }
@@ -112,7 +109,7 @@ router.get("/user", auth, async (req, res) => {
 
   try {
     let order = await Order.find({ userId:req.user._id });
-    return res.status(201).send(order);
+    return res.status(201).send(order.reverse());
     
   } catch (err) {
     console.log(err);
